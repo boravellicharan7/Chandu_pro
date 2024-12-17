@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profusion</title>
+    <link rel="stylesheet" href="login.css">
+    <link rel="shortcut icon"
+        href="images/Motivational Typography Design Evoking Nostalgia In Rustic Outdoor Setting.png"
+        type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+    <div class="mb-3 user_input container" id="loginSection">
+        <h1>Login</h1>
+
+        <form id="loginForm" onsubmit="return validateLoginForm()">
+            <input type="email" id="loginEmail" name="loginEmail" placeholder="Enter your email" required>
+            <div id="loginEmailError" class="error"></div>
+
+            <div class="password-container">
+                <input type="password" id="loginPassword" name="loginPassword" placeholder="Enter your password" required>
+                <span class="eye-icon" id="eyeIconLogin"
+                    onclick="togglePasswordVisibility('loginPassword', 'eyeIconLogin')">👁</span>
+            </div>
+            <div id="loginPasswordError" class="error"></div>
+
+            <button type="submit">Login</button>
+            <div class="link">
+                <h5>Don't have an account? <a href="javascript:void(0);" onclick="toggleSection('register')">Create an
+                        account</a></h5>
+            </div>
+        </form>
+    </div>
+
+    <div id="registerSection" style="display: none;">
+        <h1>Register</h1>
+        <form id="registerForm">
+            <input type="email" id="registerEmail" name="registerEmail" placeholder="Enter your email" required>
+            <div id="registerEmailError" class="error"></div>
+
+            <div class="password-container">
+                <input type="password" id="registerPassword" name="registerPassword" placeholder="Enter your password" required>
+                <span class="eye-icon" id="eyeIconRegister"
+                    onclick="togglePasswordVisibility('registerPassword', 'eyeIconRegister')">👁</span>
+            </div>
+            <div id="registerPasswordError" class="error"></div>
+
+            <div class="password-container">
+                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
+                <span class="eye-icon" id="eyeIconConfirm"
+                    onclick="togglePasswordVisibility('confirmPassword', 'eyeIconConfirm')">👁</span>
+            </div>
+            <div id="confirmPasswordError" class="error"></div>
+
+            <button type="button" id="CreateAcc">Create Account</button>
+        </form>
+        <div class="link">Already have an account? <a href="javascript:void(0);" onclick="toggleSection('login')">Log
+                in</a></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+        import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDHEcml3aP5X8H6iY3qNnjmoIYKE6WZ4Cc",
+            authDomain: "profusion-55ee5.firebaseapp.com",
+            projectId: "profusion-55ee5",
+            storageBucket: "profusion-55ee5.appspot.com",
+            messagingSenderId: "705597166854",
+            appId: "1:705597166854:web:f714caa1b9141a93353a87"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth();
+        const db = getFirestore();
+
+        function toggleSection(section) {
+            document.getElementById('loginSection').style.display = section === 'login' ? 'block' : 'none';
+            document.getElementById('registerSection').style.display = section === 'register' ? 'block' : 'none';
+        }
+
+        function validateLoginForm() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then(() => {
+                    Swal.fire('Success', 'Login Successful!', 'success');
+                    setTimeout(() => window.location.href = "user_selector.html", 2000);
+                })
+                .catch(() => {
+                    Swal.fire('Error', 'Invalid email or password.', 'error');
+                });
+
+            return false;
+        }
+
+        document.getElementById("CreateAcc").addEventListener("click", () => {
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (password !== confirmPassword) {
+                Swal.fire('Error', 'Passwords do not match.', 'error');
+                return;
+            }
+
+            createUserWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    return setDoc(doc(db, "users", user.uid), { email });
+                })
+                .then(() => {
+                    Swal.fire('Success', 'Account created successfully!', 'success');
+                    toggleSection('login');
+                })
+                .catch((error) => {
+                    const errorMessage = error.code === 'auth/email-already-in-use'
+                        ? 'Email address already in use.'
+                        : 'Failed to create account.';
+                    Swal.fire('Error', errorMessage, 'error');
+                });
+        });
+
+        function togglePasswordVisibility(passwordId, iconId) {
+            const passwordField = document.getElementById(passwordId);
+            const eyeIcon = document.getElementById(iconId);
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                eyeIcon.textContent = '🙈';
+            } else {
+                passwordField.type = 'password';
+                eyeIcon.textContent = '👁';
+            }
+        }
+
+        window.toggleSection = toggleSection;
+        window.validateLoginForm = validateLoginForm;
+        window.togglePasswordVisibility = togglePasswordVisibility;
+    </script>
+</body>
+
+</html>
